@@ -1,6 +1,6 @@
-import { useAuth } from './use-auth';
+// import { useAuth } from './use-auth';
 
-export const useForgotPassword = () => {
-  const { forgotPassword } = useAuth();
-  return forgotPassword;
-};
+// export const useForgotPassword = () => {
+//   const { forgotPassword } = useAuth();
+//   return forgotPassword;
+// };

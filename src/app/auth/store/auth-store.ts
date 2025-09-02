@@ -1,0 +1,70 @@
+"use client";
+
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { setAuthToken } from "@/lib/api/api";
+import * as authService from "@/app/auth/services/auth/auth";
+import type { User, LoginResponse } from "@/app/types/users/user";
+
+type AuthState = {
+  user: User | null;
+  loading: boolean;
+  token: string | null;
+  hydrated: boolean;
+
+  hydrateFromStorage: () => Promise<void>;
+  login: (email: string, password: string) => Promise<LoginResponse>;
+  logout: () => void;
+};
+
+export const useAuthStore = create<AuthState>()(
+  devtools((set) => ({
+    user: null,
+    loading: false,
+    token: null,
+    hydrated: false,
+
+    hydrateFromStorage: async () => {
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+        if (token) {
+          setAuthToken(token); // Ensure axios has the token
+          set({ token, loading: true });
+
+          // Fetch current user after setting token
+          const me = await authService.getMe();
+          set({ user: me, loading: false, hydrated: true });
+        } else {
+          set({ user: null, token: null, loading: false, hydrated: true });
+        }
+      } catch (e) {
+        console.error("Failed to hydrate auth:", e);
+        localStorage.removeItem("token");
+        setAuthToken(undefined);
+        set({ user: null, token: null, loading: false, hydrated: true });
+      }
+    },
+
+    login: async (email: string, password: string) => {
+      set({ loading: true });
+      try {
+        const { accessToken, user } = await authService.login(email, password);
+        localStorage.setItem("token", accessToken);
+        setAuthToken(accessToken);
+        set({ token: accessToken, user, loading: false });
+        return { accessToken, user };
+      } catch (err) {
+        set({ loading: false });
+        throw err;
+      }
+    },
+
+    logout: () => {
+      localStorage.removeItem("token");
+      setAuthToken(undefined);
+      set({ user: null, token: null });
+    },
+  }))
+);

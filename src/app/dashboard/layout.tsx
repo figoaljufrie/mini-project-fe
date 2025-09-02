@@ -3,7 +3,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -12,11 +12,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/app/auth/store/auth-store"; // ✅ Zustand
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // ✅ Zustand store
+  const { user, logout } = useAuthStore();
 
   useEffect(() => {
     if (pathname?.startsWith("/dashboard/settings")) {
@@ -57,7 +61,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const breadcrumbs = getBreadcrumbs();
 
   const handleSignOut = () => {
-    // Clear any auth state/session here if needed
+    logout(); // ✅ Zustand logout clears token + user
     router.push("/auth/login");
   };
 
@@ -146,9 +150,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <button className="flex items-center gap-3 rounded-full px-3 py-2 hover:bg-black/5 transition">
                 <Avatar className="h-8 w-8 border border-teal-600">
                   <AvatarImage src="/placeholder-avatar.png" alt="Profile" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarFallback>
+                    {user?.name?.[0] ?? user?.username?.[0] ?? "?"}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-black">John Doe</span>
+                <span className="font-medium text-black">
+                  {user?.username ?? user?.name ?? "User"}
+                </span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">

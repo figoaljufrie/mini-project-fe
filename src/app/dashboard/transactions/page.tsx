@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DataTable, transactionColumns } from "@/app/dashboard/home/components/tables/recent-transaction";
 import { Button } from "@/components/ui/button";
-import { DataTable, transactionColumns } from "@/components/dashboard/tables/recent-transaction";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 export default function TransactionsPage() {
   const [search, setSearch] = useState("");
