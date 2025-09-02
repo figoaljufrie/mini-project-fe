@@ -21,6 +21,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // ✅ Zustand store
   const { user, logout } = useAuthStore();
+  
+  //buat bounce router ke landing page kalo bukan organizer:
+  useEffect(() => {
+    if (user && user.role?.toUpperCase() !== "ORGANIZER") {
+      router.replace("/"); // bounce non-organizers to landing page
+    }
+  }, [user, router]);
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (pathname?.startsWith("/dashboard/settings")) {

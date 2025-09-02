@@ -1,98 +1,138 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 import { PiEyesLight } from "react-icons/pi";
+import { updatePassword } from "@/app/auth/services/auth/authService";
 
-export default function UserPasswordPage() {
+export default function PasswordPage() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Password updated successfully!");
+    setError(null);
+    setSuccess(null);
+
+    if (newPassword !== confirmPassword) {
+      setError("New password and confirm password do not match");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await updatePassword({ currentPassword, newPassword });
+      setSuccess("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.response?.data?.message || "Failed to update password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="p-8">
-      <Card className="bg-white/10 backdrop-blur-lg shadow-lg border border-white/20 rounded-2xl p-8 max-w-full">
-        <CardContent>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Change Password</h2>
-            <Button className="bg-white/20 backdrop-blur-lg border border-white/30 text-white">
-              Save Changes
-            </Button>
-          </div>
+    <div className="p-8 max-w-4xl mx-auto space-y-6">
+      <h2 className="text-2xl font-bold text-black mb-4">Change Password</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-            {/* Left Section: Password Form */}
-            <div className="space-y-6 text-white">
+      <Card className="backdrop-blur-xl bg-gradient-to-br from-teal-400/20 via-teal-500/20 to-teal-600/20 border border-teal-700/30 shadow-md rounded-xl transition hover:shadow-[0_6px_18px_rgba(0,128,128,0.4)]">
+        <CardContent>
+          <form
+            onSubmit={handleSave}
+            className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start"
+          >
+            <div className="space-y-6 text-black">
               {/* Current Password */}
               <div className="relative">
-                <label className="block text-sm font-medium mb-1">Current Password</label>
+                <label className="block text-sm font-medium mb-1">
+                  Current Password
+                </label>
                 <Input
                   type={showCurrent ? "text" : "password"}
                   placeholder="Enter current password"
-                  className="bg-white/20 text-white placeholder-white/70 pr-10"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="bg-white/10 text-black placeholder-black/40 border border-white/20 focus:border-teal-400/40 w-full pr-10"
                   required
                 />
                 <div
-                  className="absolute right-3 top-10.5 -translate-y-1/2 text-white cursor-pointer"
+                  className="absolute right-3 top-10.5 -translate-y-1/2 cursor-pointer"
                   onClick={() => setShowCurrent(!showCurrent)}
                 >
-                  <PiEyesLight className="text-white" size={20} />
+                  <PiEyesLight size={20} />
                 </div>
               </div>
 
               {/* New Password */}
               <div className="relative">
-                <label className="block text-sm font-medium mb-1">New Password</label>
+                <label className="block text-sm font-medium mb-1">
+                  New Password
+                </label>
                 <Input
                   type={showNew ? "text" : "password"}
                   placeholder="Enter new password"
-                  className="bg-white/20 text-white placeholder-white/70 pr-10"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="bg-white/10 text-black placeholder-black/40 border border-white/20 focus:border-teal-400/40 w-full pr-10"
                   required
                 />
                 <div
-                  className="absolute right-3 top-10.5 -translate-y-1/2 text-white cursor-pointer"
+                  className="absolute right-3 top-10.5 -translate-y-1/2 cursor-pointer"
                   onClick={() => setShowNew(!showNew)}
                 >
-                  <PiEyesLight className="text-white" size={20} />
+                  <PiEyesLight size={20} />
                 </div>
               </div>
 
               {/* Confirm Password */}
               <div className="relative">
-                <label className="block text-sm font-medium mb-1">Confirm Password</label>
+                <label className="block text-sm font-medium mb-1">
+                  Confirm Password
+                </label>
                 <Input
                   type={showConfirm ? "text" : "password"}
                   placeholder="Confirm new password"
-                  className="bg-white/20 text-white placeholder-white/70 pr-10"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-white/10 text-black placeholder-black/40 border border-white/20 focus:border-teal-400/40 w-full pr-10"
                   required
                 />
                 <div
-                  className="absolute right-3 top-10.5 -translate-y-1/2 text-white cursor-pointer"
+                  className="absolute right-3 top-10.5 -translate-y-1/2 cursor-pointer"
                   onClick={() => setShowConfirm(!showConfirm)}
                 >
-                  <PiEyesLight className="text-white" size={20} />
+                  <PiEyesLight size={20} />
                 </div>
               </div>
 
+              {error && <p className="text-red-500">{error}</p>}
+              {success && <p className="text-green-500">{success}</p>}
+
               <Button
-                className="bg-white/20 text-white border border-white/30 mt-2"
-                onClick={handleSave}
+                type="submit"
+                disabled={loading}
+                className="bg-white/20 text-black border border-teal-400/20 backdrop-blur-lg hover:bg-white/30 hover:shadow-[0_4px_12px_rgba(0,128,128,0.3)] transition mt-2"
               >
-                Save Password
+                {loading ? "Saving..." : "Save Password"}
               </Button>
             </div>
 
-            {/* Right Section: Empty for alignment */}
             <div></div>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

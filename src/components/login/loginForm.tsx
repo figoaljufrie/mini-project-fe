@@ -27,6 +27,7 @@ export default function LoginForm() {
       // login() now returns { user, accessToken }
       const { user } = await login(email, password);
 
+      // Redirect based on role
       if (user?.role?.toUpperCase() === "ORGANIZER") {
         router.push("/dashboard/home");
       } else {
@@ -34,7 +35,10 @@ export default function LoginForm() {
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err?.response?.data?.message || "Login failed. Please check your credentials.");
+      setError(
+        err?.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
     } finally {
       setLoading(false);
     }
@@ -74,15 +78,26 @@ export default function LoginForm() {
       {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
       <p className="text-center text-gray-500 text-sm mt-4">
-        Don’t have an account?{" "}
+        Dont have an account?{" "}
         <span
           className="text-green-800 font-medium cursor-pointer"
           onClick={() =>
-            router.push(`/auth/customer/register?next=${encodeURIComponent(next)}`)
+            router.push(
+              `/auth/customer/register?next=${encodeURIComponent(next)}`
+            )
           }
         >
           Register
         </span>
+        <p className="text-center text-gray-500 text-sm mt-2">
+          Forgot Password?
+          <span
+            className="text-green-800 font-medium cursor-pointer"
+            onClick={() => router.push("/auth/forgot-password")}
+          >
+            Click Here!
+          </span>
+        </p>
       </p>
     </form>
   );

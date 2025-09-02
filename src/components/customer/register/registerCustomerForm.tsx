@@ -1,4 +1,3 @@
-// auth/customer/register/components/RegisterCustomerForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -35,6 +34,10 @@ export default function RegisterCustomerForm() {
     }
   };
 
+  const handleOrganizerRegister = () => {
+    router.push(`${window.location.origin}/auth/organizer/register`);
+  };
+
   return (
     <form
       onSubmit={onSubmit}
@@ -55,6 +58,17 @@ export default function RegisterCustomerForm() {
       </Button>
 
       {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+
+      {/* Added sentence for organizer registration INSIDE the card */}
+      <p className="mt-4 text-sm text-gray-700">
+        Want to create your own event?{" "}
+        <span
+          onClick={handleOrganizerRegister}
+          className="text-teal-600 font-semibold cursor-pointer hover:underline"
+        >
+          Register as organizer!
+        </span>
+      </p>
     </form>
   );
 }

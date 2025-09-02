@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getMe, updateProfile } from "@/app/auth/services/auth/auth";
+import { getMe, updateProfile } from "@/app/auth/services/auth/authService";
 import { useAuthStore } from "@/app/auth/store/auth-store";
 import type { User } from "@/app/types/users/user";
 

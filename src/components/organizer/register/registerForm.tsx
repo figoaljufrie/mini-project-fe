@@ -1,4 +1,4 @@
-// /components/register/OrganizerForm.tsx
+// /components/organizer/register/OrganizerForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -12,14 +12,14 @@ export default function OrganizerForm() {
   const search = useSearchParams();
   const next = search?.get("next") ?? "/";
 
+  const { registerOrganizer, loading, error } = useRegisterOrganizer();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     username: "",
     password: "",
   });
-
-  const { registerOrganizer, loading, error } = useRegisterOrganizer();
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,8 +32,16 @@ export default function OrganizerForm() {
     } catch (_) {}
   };
 
+  const handleCustomerRegister = () => {
+    router.push(`${window.location.origin}/auth/customer/register`);
+  };
+
   return (
-    <form onSubmit={onSubmit} className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-4" noValidate>
+    <form
+      onSubmit={onSubmit}
+      className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-4 text-center"
+      noValidate
+    >
       <h2 className="text-2xl font-bold text-gray-900">Become an Organizer</h2>
       <p className="text-black mb-6">Create your organizer account and start hosting events today.</p>
 
@@ -42,19 +50,24 @@ export default function OrganizerForm() {
       <Input name="username" placeholder="Username" value={form.username} onChange={onChange} required />
       <Input name="password" type="password" placeholder="Password" value={form.password} onChange={onChange} required />
 
-      <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 text-white">
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-green-700 to-green-900 text-white"
+      >
         {loading ? "Registering..." : "Register as Organizer"}
       </Button>
 
       {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
 
-      <p className="text-center text-gray-500 text-sm mt-4">
-        Already an organizer?{" "}
+      {/* Added sentence inside the card to match customer form design */}
+      <p className="mt-4 text-sm text-gray-700 text-center">
+        Want to join as a customer instead?{" "}
         <span
-          className="text-indigo-700 font-medium cursor-pointer"
-          onClick={() => router.push(`/auth/login?next=${encodeURIComponent(next)}`)}
+          onClick={handleCustomerRegister}
+          className="text-teal-600 font-semibold cursor-pointer hover:underline"
         >
-          Log in
+          Register as customer!
         </span>
       </p>
     </form>

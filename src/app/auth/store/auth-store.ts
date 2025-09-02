@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { setAuthToken } from "@/lib/api/api";
-import * as authService from "@/app/auth/services/auth/auth";
+import * as authService from "@/app/auth/services/auth/authService";
 import type { User, LoginResponse } from "@/app/types/users/user";
 
 type AuthState = {
@@ -15,6 +15,7 @@ type AuthState = {
   hydrateFromStorage: () => Promise<void>;
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => void;
+  setUser: (user: User | null) => void; // ✅ added setUser
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -30,10 +31,9 @@ export const useAuthStore = create<AuthState>()(
           typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
         if (token) {
-          setAuthToken(token); // Ensure axios has the token
+          setAuthToken(token);
           set({ token, loading: true });
 
-          // Fetch current user after setting token
           const me = await authService.getMe();
           set({ user: me, loading: false, hydrated: true });
         } else {
@@ -66,5 +66,7 @@ export const useAuthStore = create<AuthState>()(
       setAuthToken(undefined);
       set({ user: null, token: null });
     },
+
+    setUser: (user: User | null) => set({ user }), // ✅ setter for updating user state
   }))
 );
