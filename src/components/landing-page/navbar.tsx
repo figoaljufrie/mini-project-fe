@@ -43,7 +43,7 @@ export default function Navbar() {
             </svg>
             Buat Event
           </Link>
-          <Link href="/login" className="btn-secondary">
+          <Link href="auth/login" className="btn-secondary">
             Login
           </Link>
         </div>
