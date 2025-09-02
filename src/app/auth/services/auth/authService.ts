@@ -1,3 +1,4 @@
+// src/app/auth/services/auth/auth.ts
 import api, { setAuthToken } from "@/lib/api/api";
 import type { User } from "@/app/types/users/user";
 
@@ -6,24 +7,29 @@ export interface UpdatePasswordPayload {
   newPassword: string;
 }
 
-// login -> returns { user, accessToken }
+export interface UpdatePasswordResponse {
+  message: string;
+}
+
+// Login -> returns { user, accessToken }
 export const login = async (email: string, password: string) => {
   const res = await api.post("/auth/login", { email, password });
   const { accessToken, user } = res.data.data;
 
-  // Store token and set axios header
+  // Store token locally and set axios header
   localStorage.setItem("token", accessToken);
   setAuthToken(accessToken);
 
   return { user, accessToken };
 };
 
-// current user
+// Current user
 export const getMe = async (): Promise<User> => {
   const res = await api.get("/auth/me");
-  return res.data.data; // make sure backend returns data.data
+  return res.data.data;
 };
 
+// Update profile
 export const updateProfile = async (
   id: number,
   data: { name?: string; username?: string }
@@ -32,7 +38,15 @@ export const updateProfile = async (
   return res.data.data;
 };
 
-// Register endpoints
+// Update password
+export const updatePassword = async (
+  payload: UpdatePasswordPayload
+): Promise<UpdatePasswordResponse> => {
+  const res = await api.patch("/auth/update-password", payload);
+  return res.data.data;
+};
+
+// Register customer
 export const registerCustomer = async (data: {
   name: string;
   email: string;
@@ -42,6 +56,7 @@ export const registerCustomer = async (data: {
   return res.data.data;
 };
 
+// Register organizer
 export const registerOrganizer = async (data: {
   name: string;
   email: string;
@@ -52,10 +67,12 @@ export const registerOrganizer = async (data: {
   return res.data.data;
 };
 
+// Forgot password
 export async function forgotPassword(email: string) {
   return api.post("/auth/forgot-password", { email });
 }
 
+// Reset password
 export async function resetPassword(token: string, password: string) {
   return api.patch(
     "/auth/reset-password",
@@ -64,23 +81,7 @@ export async function resetPassword(token: string, password: string) {
   );
 }
 
-// src/app/auth/services/auth/auth.ts
-export interface UpdatePasswordPayload {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export interface UpdatePasswordResponse {
-  message: string;
-}
-
-export const updatePassword = async (
-  payload: UpdatePasswordPayload
-): Promise<UpdatePasswordResponse> => {
-  const res = await api.patch("/auth/update-password", payload);
-  return res.data.data; // backend returns { message: string } inside data
-};
-
+// Logout
 export async function logout() {
   localStorage.removeItem("token");
   setAuthToken(undefined);

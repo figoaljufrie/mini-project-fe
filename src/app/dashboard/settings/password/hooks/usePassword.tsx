@@ -1,6 +1,6 @@
 // src/app/dashboard/settings/password/hooks/usePassword.ts
 import { useState, useCallback } from "react";
-import { updatePassword as updatePasswordService, UpdatePasswordPayload } from "@/app/auth/services/auth/auth";
+import { updatePassword as updatePasswordService, UpdatePasswordPayload } from "@/app/auth/services/auth/authService";
 import { useAuthStore } from "@/app/auth/store/auth-store";
 
 export function usePassword() {
