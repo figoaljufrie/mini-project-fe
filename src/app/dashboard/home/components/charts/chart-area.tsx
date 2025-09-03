@@ -1,6 +1,5 @@
 "use client";
 
-import { useDashboardStats } from "@/app/dashboard/hooks/useDashboard";
 import {
   AreaChart,
   Area,
@@ -10,36 +9,41 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { TransactionWithRelations } from "../tables/recent-transaction";
 
-// Generate a full year of months
 const months = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-export function ChartAreaAxes() {
-  const { revenue } = useDashboardStats();
+interface ChartAreaAxesProps {
+  transactions?: TransactionWithRelations[];
+}
 
-  if (revenue.isLoading) {
-    return <div className="p-4">Loading revenue chart...</div>;
-  }
+export function ChartAreaAxes({ transactions = [] }: ChartAreaAxesProps) {
+  // Filter only DONE transactions
+  const doneTransactions = transactions.filter((tx) => tx.status === "DONE");
 
-  if (revenue.isError) {
-    return (
-      <div className="p-4 text-red-600">
-        Error loading revenue chart: {revenue.error?.message}
-      </div>
-    );
-  }
+  // Debug: log to make sure we have transactions
+  console.log("DONE transactions for chart:", doneTransactions);
 
-  // Assume API returns an object like { Jan: 1000, Feb: 2000, ... }
-  const revenueData = revenue.data || {};
+  // Group revenue by month
+  const revenueByMonth: Record<string, number> = {};
+  doneTransactions.forEach((tx) => {
+    // Make sure createdAt is valid
+    const date = tx.createdAt ? new Date(tx.createdAt) : new Date();
+    const month = months[date.getMonth()];
+    revenueByMonth[month] = (revenueByMonth[month] || 0) + (tx.totalIdr ?? 0);
+  });
 
-  // Map into recharts format with all 12 months
+  // Prepare data for Recharts
   const data = months.map((month) => ({
     name: month,
-    sales: revenueData[month] ?? 0,
+    sales: revenueByMonth[month] || 0,
   }));
+
+  // Debug: log chart data
+  console.log("Chart data:", data);
 
   return (
     <div className="p-4 rounded-2xl shadow-md bg-white/20">
@@ -54,7 +58,14 @@ export function ChartAreaAxes() {
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-300/40" />
           <XAxis dataKey="name" />
           <YAxis />
-          <Tooltip />
+          <Tooltip
+            formatter={(value: number) =>
+              value.toLocaleString("id-ID", {
+                style: "currency",
+                currency: "IDR",
+              })
+            }
+          />
           <Area
             type="monotone"
             dataKey="sales"

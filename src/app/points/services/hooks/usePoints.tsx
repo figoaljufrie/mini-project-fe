@@ -1,6 +1,6 @@
 // hooks/usePoints.ts
 import { useState, useEffect } from "react";
-import { getUserPoints } from "../services/pointsService";
+import { getUserPoints } from "@/app/points/services/pointsService";
 
 export function usePoints() {
   const [points, setPoints] = useState<number>(0);

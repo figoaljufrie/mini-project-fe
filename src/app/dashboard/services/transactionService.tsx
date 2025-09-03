@@ -1,36 +1,48 @@
 // src/app/dashboard/services/transactionService.ts
+import api from "@/lib/api/api";
+
 export type Transaction = {
-  id: string | number;
-  user?: { name?: string };
-  event?: { title?: string };
-  totalIdr?: number;
-  status?: string;
+  id: number;
+  userId: number;
+  eventId: number;
+  status: string;
+  totalIdr: number;
+  user?: { id: number; name: string };
+  event?: { eventId: number; title: string };
+  createdAt: string; // <-- add this
+};
+
+export type Event = {
+  eventId: number;
+  title: string;
+};
+
+export type User = {
+  id: number;
+  name: string;
 };
 
 export const transactionService = {
-  // Fetch all transactions
+  // Fetch all transactions for organizer dashboard
   getAll: async (): Promise<Transaction[]> => {
-    const res = await fetch("/api/transactions");
-    if (!res.ok) throw new Error(`Failed to fetch transactions. Status: ${res.status}`);
-    const data = await res.json();
-    return data;
+    const res = await api.get("/dashboard/transactions");
+    return res.data.data || [];
   },
 
-  // Update transaction status (approve/reject)
-  updateStatus: async (id: string | number, status: string): Promise<void> => {
-    const res = await fetch(`/api/transactions/${id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) throw new Error(`Failed to update transaction. Status: ${res.status}`);
+  // Fetch all events for organizer
+  getEvents: async (): Promise<Event[]> => {
+    const res = await api.get("/dashboard/events");
+    return res.data.data || [];
   },
 
-  // Optional: fetch single transaction
-  getById: async (id: string | number): Promise<Transaction> => {
-    const res = await fetch(`/api/transactions/${id}`);
-    if (!res.ok) throw new Error(`Failed to fetch transaction ${id}. Status: ${res.status}`);
-    const data = await res.json();
-    return data;
+  // Fetch users (if needed separately)
+  getUsers: async (): Promise<User[]> => {
+    const res = await api.get("/users"); // Adjust endpoint if needed
+    return res.data.data || [];
+  },
+
+  // Update transaction status
+  updateStatus: async (id: number, status: string) => {
+    await api.patch(`/dashboard/transactions/${id}/status`, { status });
   },
 };

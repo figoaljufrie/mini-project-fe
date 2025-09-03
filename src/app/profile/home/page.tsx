@@ -18,7 +18,7 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 // ✅ newly added
-import { usePoints } from "@/app/points/hooks/usePoints";
+import { usePoints } from "@/app/points/services/hooks/usePoints";
 import { useCoupons } from "@/app/coupon/hooks/useCoupon";
 
 export default function ProfilePage() {

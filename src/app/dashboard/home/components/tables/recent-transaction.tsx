@@ -1,3 +1,4 @@
+// src/app/dashboard/home/components/tables/recent-transaction.tsx
 "use client";
 
 import * as React from "react";
@@ -17,6 +18,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  transactionService,
+  Transaction,
+  Event,
+  User,
+} from "@/app/dashboard/services/transactionService";
+
+// Extend transaction to include relations
+export interface TransactionWithRelations extends Transaction {
+  id: number;
+  userId: number;
+  eventId: number;
+  status: string;
+  totalIdr: number;
+  user?: { id: number; name: string };
+  event?: { eventId: number; title: string };
+  createdAt: string; // <-- add this
+}
 
 type DataTableProps<TData> = {
   columns: ColumnDef<TData, any>[];
@@ -41,7 +60,10 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
         <Table className="min-w-full text-sm">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-white/30">
+              <TableRow
+                key={headerGroup.id}
+                className="border-b border-white/30"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
@@ -49,7 +71,10 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
                   >
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -64,8 +89,14 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
                   className="border-b border-white/10 hover:bg-white/5 transition"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3 py-2 whitespace-nowrap">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <TableCell
+                      key={cell.id}
+                      className="px-3 py-2 whitespace-nowrap"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -108,25 +139,39 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
 }
 
 // Transaction columns
-export const transactionColumns = (refetch: () => void): ColumnDef<any>[] => [
-  { accessorKey: "customer", header: "Customer" },
-  { accessorKey: "event", header: "Event" },
-  { 
-    accessorKey: "amount", 
+export const transactionColumns = (
+  refetch: () => void
+): ColumnDef<TransactionWithRelations>[] => [
+  {
+    accessorKey: "user",
+    header: "Customer",
+    cell: ({ row }) => row.original.user?.name || "-",
+  },
+  {
+    accessorKey: "event",
+    header: "Event",
+    cell: ({ row }) => row.original.event?.title || "-",
+  },
+  {
+    accessorKey: "totalIdr",
     header: "Amount Paid",
     cell: ({ row }) => (
       <span>
-        {typeof row.original.amount === "number"
-          ? row.original.amount.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 })
+        {typeof row.original.totalIdr === "number"
+          ? row.original.totalIdr.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+              minimumFractionDigits: 0,
+            })
           : "-"}
       </span>
-    )
+    ),
   },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.original.status;
+      const status = row.original.status || "UNKNOWN";
       const statusMap: Record<string, string> = {
         DONE: "text-green-500",
         WAITING_FOR_PAYMENT: "text-yellow-500",
@@ -137,39 +182,60 @@ export const transactionColumns = (refetch: () => void): ColumnDef<any>[] => [
         UNKNOWN: "text-gray-400",
       };
       const color = statusMap[status] || "text-gray-400";
-      return <span className={`${color} font-medium`}>{status.replace(/_/g, " ")}</span>;
+      return (
+        <span className={`${color} font-medium`}>
+          {status.replace(/_/g, " ")}
+        </span>
+      );
     },
   },
   {
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      if (row.original.status !== "WAITING_FOR_ADMIN_CONFIRMATION") return <span className="text-gray-400">-</span>;
+      const tx = row.original as TransactionWithRelations;
+
+      if (tx.status !== "WAITING_FOR_ADMIN_CONFIRMATION") {
+        return <span className="text-gray-400">-</span>;
+      }
 
       const handleApprove = async () => {
-        await fetch(`/api/transactions/${row.original.id}/status`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "DONE" }),
-        });
-        refetch();
+        try {
+          // Optimistic update: update local state first
+          tx.status = "DONE";
+          refetch(); // fetch fresh from backend
+          await transactionService.updateStatus(Number(tx.id), "DONE");
+        } catch (err: any) {
+          console.error("Failed to approve transaction:", err);
+          alert(err?.response?.data?.message || err.message);
+        }
       };
 
       const handleReject = async () => {
-        await fetch(`/api/transactions/${row.original.id}/status`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "REJECTED" }),
-        });
-        refetch();
+        try {
+          tx.status = "REJECTED";
+          refetch();
+          await transactionService.updateStatus(Number(tx.id), "REJECTED");
+        } catch (err: any) {
+          console.error("Failed to reject transaction:", err);
+          alert(err?.response?.data?.message || err.message);
+        }
       };
 
       return (
         <div className="flex gap-2">
-          <Button size="sm" className="bg-green-500 text-white hover:bg-green-600" onClick={handleApprove}>
+          <Button
+            size="sm"
+            className="bg-green-500 text-white hover:bg-green-600"
+            onClick={handleApprove}
+          >
             Approve
           </Button>
-          <Button size="sm" className="bg-red-500 text-white hover:bg-red-600" onClick={handleReject}>
+          <Button
+            size="sm"
+            className="bg-red-500 text-white hover:bg-red-600"
+            onClick={handleReject}
+          >
             Reject
           </Button>
         </div>
