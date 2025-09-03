@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DataTable, transactionColumns } from "@/app/dashboard/home/components/tables/recent-transaction";
+import { DataTable, transactionColumns, TransactionWithRelations } from "@/app/dashboard/home/components/tables/recent-transaction";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useTransactions } from "../hooks/useTransaction";
@@ -10,17 +10,12 @@ export default function TransactionsPage() {
   const [search, setSearch] = useState("");
   const { transactions, loading, error, refetch } = useTransactions();
 
-  const mappedTransactions = transactions.map((tx: any) => ({
-    id: tx.id,
-    customer: tx.user?.name ?? "-",
-    event: tx.event?.title ?? "-",
-    amount: tx.totalIdr ?? 0,
-    status: tx.status ?? "UNKNOWN",
-  }));
-
-  const filteredTransactions = mappedTransactions.filter((tx) => {
+  const filteredTransactions = transactions.filter((tx: TransactionWithRelations) => {
     const lower = search.toLowerCase();
-    return tx.customer.toLowerCase().includes(lower) || tx.event.toLowerCase().includes(lower);
+    const customerName = tx.user?.name ?? "";
+    const eventTitle = tx.event?.title ?? "";
+
+    return customerName.toLowerCase().includes(lower) || eventTitle.toLowerCase().includes(lower);
   });
 
   if (loading) return <div className="p-8">Loading transactions...</div>;

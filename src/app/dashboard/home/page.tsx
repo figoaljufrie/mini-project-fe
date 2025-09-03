@@ -1,24 +1,45 @@
 "use client";
 
-import { useDashboardStats, useTransactions } from "@/app/dashboard/hooks/useDashboard";
+import { useDashboardStats } from "@/app/dashboard/hooks/useDashboard";
+import { useTransactions } from "@/app/dashboard/hooks/useTransaction"; // correct hook
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "./components/tables/recent-transaction";
 import { ChartAreaAxes } from "./components/charts/chart-area";
 import { ColumnDef } from "@tanstack/react-table";
+import { TransactionWithRelations } from "./components/tables/recent-transaction";
 
 // Read-only columns for Dashboard
-const transactionColumnsReadOnly: ColumnDef<any>[] = [
-  { accessorKey: "customer", header: "Customer" },
-  { accessorKey: "event", header: "Event" },
-  { accessorKey: "amount", header: "Amount Paid", cell: ({ row }) => (
+const transactionColumnsReadOnly: ColumnDef<TransactionWithRelations>[] = [
+  {
+    accessorKey: "user",
+    header: "Customer",
+    cell: ({ row }) => row.original.user?.name ?? "Unknown",
+  },
+  {
+    accessorKey: "event",
+    header: "Event",
+    cell: ({ row }) => row.original.event?.title ?? "Unknown",
+  },
+  {
+    accessorKey: "totalIdr",
+    header: "Amount Paid",
+    cell: ({ row }) => (
       <span className="font-medium">
-        {typeof row.original.amount === "number"
-          ? row.original.amount.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 })
-          : "-"}
+        {typeof row.original.totalIdr === "number"
+          ? row.original.totalIdr.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+              minimumFractionDigits: 0,
+            })
+          : "0"}
       </span>
-  ) },
-  { accessorKey: "status", header: "Status", cell: ({ row }) => {
-      const status = row.original.status;
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status ?? "UNKNOWN";
       const statusMap: Record<string, string> = {
         DONE: "text-green-500",
         WAITING_FOR_PAYMENT: "text-yellow-500",
@@ -29,32 +50,37 @@ const transactionColumnsReadOnly: ColumnDef<any>[] = [
         UNKNOWN: "text-gray-400",
       };
       const color = statusMap[status] || "text-gray-400";
-      return <span className={`${color} font-medium`}>{status.replace(/_/g, " ")}</span>;
-  } },
+      return (
+        <span className={`${color} font-medium`}>
+          {status.replace(/_/g, " ")}
+        </span>
+      );
+    },
+  },
 ];
 
 export default function DashboardHomePage() {
   const { revenue, attendees, coupons, events } = useDashboardStats();
-  const transactions = useTransactions();
+  const { transactions, loading, error, refetch } = useTransactions();
 
-  // Loading
+  // Loading state
   if (
+    loading ||
     revenue.isLoading ||
     attendees.isLoading ||
     coupons.isLoading ||
-    events.isLoading ||
-    transactions.isLoading
+    events.isLoading
   ) {
     return <div className="p-6">Loading dashboard...</div>;
   }
 
-  // Error handling
+  // Error state
   if (
+    error ||
     revenue.isError ||
     attendees.isError ||
     coupons.isError ||
-    events.isError ||
-    transactions.isError
+    events.isError
   ) {
     return (
       <div className="p-6">
@@ -68,7 +94,7 @@ export default function DashboardHomePage() {
               attendees: attendees.error?.message,
               coupons: coupons.error?.message,
               events: events.error?.message,
-              transactions: transactions.error?.message,
+              transactions: error,
             },
             null,
             2
@@ -78,12 +104,10 @@ export default function DashboardHomePage() {
     );
   }
 
-  // Totals
-  const totalRevenue = revenue.data ?? 0;
+  // KPI values
   const totalAttendees = attendees.data ?? 0;
   const totalEvents = events.data ?? 0;
 
-  // Coupons
   const couponsData = Array.isArray(coupons.data) ? coupons.data : [];
   const totalCoupons = couponsData.length;
   const totalCouponsUsed = couponsData.reduce(
@@ -91,15 +115,12 @@ export default function DashboardHomePage() {
     0
   );
 
-  // Transactions for table
-  const transactionsData = Array.isArray(transactions.data) ? transactions.data : [];
-  const transactionsForTable = transactionsData.map((t: any) => ({
-    id: t.id.toString() ?? "-",
-    customer: t.user?.name ?? "Unknown",
-    event: t.event?.title ?? "Unknown",
-    amount: t.totalIdr ?? 0,
-    status: t.status ?? "UNKNOWN",
-  }));
+  // Only DONE transactions for revenue
+  const doneTransactions = transactions.filter(tx => tx.status === "DONE");
+  const totalRevenueFromDone = doneTransactions.reduce(
+    (acc, tx) => acc + (tx.totalIdr ?? 0),
+    0
+  );
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 p-6">
@@ -114,8 +135,8 @@ export default function DashboardHomePage() {
           <Card
             key={item.title}
             className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
-            border border-teal-700/40 transform transition-transform hover:-translate-y-1 
-            hover:shadow-[0_6px_15px_rgba(0,128,128,0.6)]"
+              border border-teal-700/40 transform transition-transform hover:-translate-y-1 
+              hover:shadow-[0_6px_15px_rgba(0,128,128,0.6)]"
           >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-black">
@@ -149,7 +170,14 @@ export default function DashboardHomePage() {
             <div className="h-px bg-black/20 mt-2" />
           </CardHeader>
           <CardContent>
-            <ChartAreaAxes />
+            <div className="mb-4 text-3xl font-bold text-black">
+              {totalRevenueFromDone.toLocaleString("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              })}
+            </div>
+            <ChartAreaAxes transactions={doneTransactions} />
           </CardContent>
         </Card>
 
@@ -168,7 +196,7 @@ export default function DashboardHomePage() {
           <CardContent>
             <DataTable
               columns={transactionColumnsReadOnly}
-              data={transactionsForTable}
+              data={transactions} // full transactions list
             />
           </CardContent>
         </Card>
