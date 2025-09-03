@@ -16,18 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
-type DataTableProps<TData, TValue> = {
-  columns: ColumnDef<TData, TValue>[];
+type DataTableProps<TData> = {
+  columns: ColumnDef<TData, any>[];
   data: TData[];
 };
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
+export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
@@ -60,7 +56,7 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -68,10 +64,7 @@ export function DataTable<TData, TValue>({
                   className="border-b border-white/10 hover:bg-white/5 transition"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="px-3 py-2 whitespace-nowrap"
-                    >
+                    <TableCell key={cell.id} className="px-3 py-2 whitespace-nowrap">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -114,49 +107,26 @@ export function DataTable<TData, TValue>({
   );
 }
 
-// ✅ Adjusted Transaction Columns
-export const transactionColumns: ColumnDef<any>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+// Transaction columns
+export const transactionColumns = (refetch: () => void): ColumnDef<any>[] => [
   { accessorKey: "customer", header: "Customer" },
   { accessorKey: "event", header: "Event" },
-  {
-    accessorKey: "amount",
+  { 
+    accessorKey: "amount", 
     header: "Amount Paid",
     cell: ({ row }) => (
-      <span className="font-medium">
-        {row.original.amount.toLocaleString(undefined, {
-          style: "currency",
-          currency: "USD",
-          minimumFractionDigits: 0,
-        })}
+      <span>
+        {typeof row.original.amount === "number"
+          ? row.original.amount.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 })
+          : "-"}
       </span>
-    ),
+    )
   },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
-
-      // Map backend TxStatus to colors
       const statusMap: Record<string, string> = {
         DONE: "text-green-500",
         WAITING_FOR_PAYMENT: "text-yellow-500",
@@ -166,10 +136,44 @@ export const transactionColumns: ColumnDef<any>[] = [
         CANCELED: "text-gray-500",
         UNKNOWN: "text-gray-400",
       };
-
       const color = statusMap[status] || "text-gray-400";
-
       return <span className={`${color} font-medium`}>{status.replace(/_/g, " ")}</span>;
+    },
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      if (row.original.status !== "WAITING_FOR_ADMIN_CONFIRMATION") return <span className="text-gray-400">-</span>;
+
+      const handleApprove = async () => {
+        await fetch(`/api/transactions/${row.original.id}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "DONE" }),
+        });
+        refetch();
+      };
+
+      const handleReject = async () => {
+        await fetch(`/api/transactions/${row.original.id}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "REJECTED" }),
+        });
+        refetch();
+      };
+
+      return (
+        <div className="flex gap-2">
+          <Button size="sm" className="bg-green-500 text-white hover:bg-green-600" onClick={handleApprove}>
+            Approve
+          </Button>
+          <Button size="sm" className="bg-red-500 text-white hover:bg-red-600" onClick={handleReject}>
+            Reject
+          </Button>
+        </div>
+      );
     },
   },
 ];

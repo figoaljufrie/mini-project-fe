@@ -2,13 +2,42 @@
 
 import { useDashboardStats, useTransactions } from "@/app/dashboard/hooks/useDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, transactionColumns } from "./components/tables/recent-transaction";
+import { DataTable } from "./components/tables/recent-transaction";
 import { ChartAreaAxes } from "./components/charts/chart-area";
+import { ColumnDef } from "@tanstack/react-table";
+
+// Read-only columns for Dashboard
+const transactionColumnsReadOnly: ColumnDef<any>[] = [
+  { accessorKey: "customer", header: "Customer" },
+  { accessorKey: "event", header: "Event" },
+  { accessorKey: "amount", header: "Amount Paid", cell: ({ row }) => (
+      <span className="font-medium">
+        {typeof row.original.amount === "number"
+          ? row.original.amount.toLocaleString("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 })
+          : "-"}
+      </span>
+  ) },
+  { accessorKey: "status", header: "Status", cell: ({ row }) => {
+      const status = row.original.status;
+      const statusMap: Record<string, string> = {
+        DONE: "text-green-500",
+        WAITING_FOR_PAYMENT: "text-yellow-500",
+        WAITING_FOR_ADMIN_CONFIRMATION: "text-yellow-500",
+        REJECTED: "text-red-500",
+        EXPIRED: "text-gray-500",
+        CANCELED: "text-gray-500",
+        UNKNOWN: "text-gray-400",
+      };
+      const color = statusMap[status] || "text-gray-400";
+      return <span className={`${color} font-medium`}>{status.replace(/_/g, " ")}</span>;
+  } },
+];
 
 export default function DashboardHomePage() {
   const { revenue, attendees, coupons, events } = useDashboardStats();
   const transactions = useTransactions();
 
+  // Loading
   if (
     revenue.isLoading ||
     attendees.isLoading ||
@@ -19,6 +48,7 @@ export default function DashboardHomePage() {
     return <div className="p-6">Loading dashboard...</div>;
   }
 
+  // Error handling
   if (
     revenue.isError ||
     attendees.isError ||
@@ -48,12 +78,12 @@ export default function DashboardHomePage() {
     );
   }
 
-  // ✅ Totals
+  // Totals
   const totalRevenue = revenue.data ?? 0;
   const totalAttendees = attendees.data ?? 0;
   const totalEvents = events.data ?? 0;
 
-  // Calculate total coupons used and remaining
+  // Coupons
   const couponsData = Array.isArray(coupons.data) ? coupons.data : [];
   const totalCoupons = couponsData.length;
   const totalCouponsUsed = couponsData.reduce(
@@ -61,6 +91,7 @@ export default function DashboardHomePage() {
     0
   );
 
+  // Transactions for table
   const transactionsData = Array.isArray(transactions.data) ? transactions.data : [];
   const transactionsForTable = transactionsData.map((t: any) => ({
     id: t.id.toString() ?? "-",
@@ -68,7 +99,7 @@ export default function DashboardHomePage() {
     event: t.event?.title ?? "Unknown",
     amount: t.totalIdr ?? 0,
     status: t.status ?? "UNKNOWN",
-  })) ?? [];
+  }));
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 p-6">
@@ -136,7 +167,7 @@ export default function DashboardHomePage() {
           </CardHeader>
           <CardContent>
             <DataTable
-              columns={transactionColumns}
+              columns={transactionColumnsReadOnly}
               data={transactionsForTable}
             />
           </CardContent>

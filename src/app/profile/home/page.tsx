@@ -1,14 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/app/auth/store/auth-store";
 import { getMe, updateProfile } from "@/app/auth/services/auth/authService";
+import { useAvatar } from "@/app/auth/hooks/use-avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+
+// ✅ newly added
+import { usePoints } from "@/app/points/hooks/usePoints";
+import { useCoupons } from "@/app/coupon/hooks/useCoupon";
 
 export default function ProfilePage() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { hydrated, user, setUser } = useAuthStore();
   const [form, setForm] = useState({
     name: "",
@@ -18,6 +32,19 @@ export default function ProfilePage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const {
+    uploadAvatar,
+    loading: avatarLoading,
+    error: avatarError,
+  } = useAvatar(user?.id ?? null, setUser);
+
+  // ✅ new hooks
+  const {
+    points,
+    transactions,
+    loading: pointsLoading,
+  } = usePoints();
+  const { coupons, loading: couponsLoading } = useCoupons();
 
   // Fetch user if not loaded
   useEffect(() => {
@@ -63,6 +90,12 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      await uploadAvatar(e.target.files[0]);
+    }
+  };
+
   const getInitials = (name: string) =>
     name
       ? name
@@ -77,7 +110,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto space-y-8">
       <Card className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 border border-teal-700/40 rounded-2xl shadow-[0_10px_25px_rgba(0,128,128,0.4)] hover:shadow-[0_15px_35px_rgba(0,128,128,0.6)] transition-all duration-300">
         <CardContent className="p-8 space-y-10">
           {/* Header */}
@@ -104,7 +137,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Username</label>
+                <label className="block text-sm font-medium mb-1">
+                  Username
+                </label>
                 <Input
                   value={form.username}
                   onChange={(e) => handleChange("username", e.target.value)}
@@ -120,7 +155,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Referral Code</label>
+                <label className="block text-sm font-medium mb-1">
+                  Referral Code
+                </label>
                 <Input
                   value={form.referralCode}
                   disabled
@@ -131,16 +168,113 @@ export default function ProfilePage() {
 
             {/* Right Section */}
             <div className="flex flex-col items-center space-y-6">
-              <Avatar className="h-32 w-32 border-4 border-teal-700 shadow-[0_5px_20px_rgba(0,128,128,0.5)]">
-                <AvatarFallback>{getInitials(form.name)}</AvatarFallback>
-              </Avatar>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="focus:outline-none">
+                    <Avatar className="h-32 w-32 border-4 border-teal-700 shadow-[0_5px_20px_rgba(0,128,128,0.5)] cursor-pointer">
+                      {user?.avatarUrl ? (
+                        <AvatarImage
+                          src={
+                            user?.avatarUrl ||
+                            `https://ui-avatars.com/api/?name=${form.name}`
+                          }
+                          alt={user.name || "User Avatar"}
+                        />
+                      ) : (
+                        <AvatarFallback>
+                          {getInitials(form.name)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="flex justify-center items-center bg-transparent border-none shadow-none">
+                  <DialogHeader>
+                    <VisuallyHidden>
+                      <DialogTitle>Profile Avatar Preview</DialogTitle>
+                    </VisuallyHidden>
+                  </DialogHeader>
+                  <img
+                    src={
+                      user?.avatarUrl ||
+                      `https://ui-avatars.com/api/?name=${form.name}`
+                    }
+                    alt={user.name || "User Avatar"}
+                    className="max-h-[80vh] max-w-[80vw] rounded-2xl shadow-lg"
+                  />
+                </DialogContent>
+              </Dialog>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+
               <Button
                 variant="outline"
+                disabled={avatarLoading}
+                onClick={() => fileInputRef.current?.click()}
                 className="bg-white/40 text-black border border-teal-700/40 rounded-xl px-4 py-2 shadow-[0_5px_15px_rgba(0,128,128,0.4)] transition-transform duration-300 hover:scale-105 hover:bg-teal-500/20"
               >
-                Upload New Picture
+                {avatarLoading ? "Uploading..." : "Upload New Picture"}
               </Button>
+              {avatarError && (
+                <p className="text-red-500 text-sm">{avatarError}</p>
+              )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ✅ Points and Coupons Section */}
+      <Card className="bg-white/60 border border-teal-700/30 rounded-2xl shadow-md">
+        <CardContent className="p-6 space-y-6 text-black">
+          <h3 className="text-xl font-bold">Rewards</h3>
+
+          {/* Points */}
+          <div>
+            <h4 className="font-semibold">Points Balance</h4>
+            {pointsLoading ? (
+              <p>Loading points...</p>
+            ) : (
+              <p className="text-lg">{points} points</p>
+            )}
+
+            <h5 className="mt-2 font-medium">Transactions</h5>
+            <ul className="list-disc pl-6 text-sm space-y-1">
+              {transactions.map((tx) => (
+                <li key={tx.id}>
+                  {tx.amount} pts —{" "}
+                  {tx.expiresAt
+                    ? `Expires ${new Date(tx.expiresAt).toLocaleDateString()}`
+                    : "No expiry"}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Coupons */}
+          <div>
+            <h4 className="font-semibold">My Coupons</h4>
+            {couponsLoading ? (
+              <p>Loading coupons...</p>
+            ) : coupons.length === 0 ? (
+              <p>No coupons available</p>
+            ) : (
+              <ul className="text-md space-y-1">
+                {coupons.map((c) => (
+                  <li key={c.id}>
+                    Rp{c.discountIdr?.toLocaleString("id-ID")} — {c.status} —{" "}
+                    {c.expiresAt
+                      ? `Expires ${new Date(c.expiresAt).toLocaleDateString()}`
+                      : "No expiry"}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </CardContent>
       </Card>

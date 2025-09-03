@@ -89,15 +89,15 @@ export default function LoginForm() {
         >
           Register
         </span>
-        <p className="text-center text-gray-500 text-sm mt-2">
-          Forgot Password?
-          <span
-            className="text-green-800 font-medium cursor-pointer"
-            onClick={() => router.push("/auth/forgot-password")}
-          >
-            Click Here!
-          </span>
-        </p>
+      </p>
+      <p className="text-center text-gray-500 text-sm mt-2">
+        Forgot Password?
+        <span
+          className="text-green-800 font-medium cursor-pointer"
+          onClick={() => router.push("/auth/forgot-password")}
+        >
+          Click Here!
+        </span>
       </p>
     </form>
   );

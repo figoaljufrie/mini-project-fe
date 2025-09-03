@@ -14,8 +14,11 @@ export interface BaseUser {
   referralCode?: string;
   referredById?: number;
   points: number;
+  coupon: number;
   createdAt: string;
   updatedAt: string;
+  avatarUrl: string | null;
+  avatarPublicId: string | null;
 }
 
 export type LoginResponse = {
