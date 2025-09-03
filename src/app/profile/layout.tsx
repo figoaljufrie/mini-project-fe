@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LuLayoutDashboard } from "react-icons/lu";
+import { FaCoins } from "react-icons/fa";
+import { RiCoupon2Fill } from "react-icons/ri";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,6 +15,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/app/auth/store/auth-store";
+import { useCoupons } from "../coupon/hooks/useCoupon";
 
 export default function CustomerLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +23,7 @@ export default function CustomerLayout({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { user, logout } = useAuthStore();
+  const { coupons, loading: couponsLoading } = useCoupons();
 
   useEffect(() => {
     if (pathname?.startsWith("/profile/settings")) {
@@ -141,27 +145,60 @@ export default function CustomerLayout({ children }: { children: ReactNode }) {
             ))}
           </div>
 
-          {/* Avatar + Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 rounded-full px-3 py-2 hover:bg-black/5 transition">
-                <Avatar className="h-8 w-8 border border-teal-600">
-                  <AvatarImage src="/placeholder-avatar.png" alt="Profile" />
-                  <AvatarFallback>
-                    {user?.name?.[0] ?? user?.username?.[0] ?? "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="font-medium text-black">
-                  {user?.username ?? user?.name ?? "User"}
+          {/* Avatar + Points + Coupon + Dropdown */}
+          <div className="flex items-center gap-6">
+            {/* Points */}
+            <div className="flex items-center gap-1 text-black font-semibold">
+              <FaCoins className="text-lg" />
+              <span>{user?.points ?? 0}</span>
+            </div>
+
+            {/* Coupon */}
+            <div className="flex items-center gap-1 text-black font-semibold">
+              <RiCoupon2Fill className="text-lg" />
+              {couponsLoading ? (
+                <span>Loading...</span>
+              ) : coupons.length === 0 ? (
+                <span>0</span>
+              ) : (
+                <span>
+                  Rp
+                  {coupons
+                    .map((c) => c.discountIdr ?? 0)
+                    .reduce((a, b) => a + b, 0)
+                    .toLocaleString("id-ID")}
                 </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={handleSignOut}>
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              )}
+            </div>
+
+            {/* Avatar + Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 rounded-full px-3 py-2 hover:bg-black/5 transition">
+                  <Avatar className="h-8 w-8 border border-teal-600">
+                    {user?.avatarUrl ? (
+                      <AvatarImage
+                        src={user.avatarUrl}
+                        alt={user?.name || user?.username || "User Avatar"}
+                      />
+                    ) : (
+                      <AvatarFallback>
+                        {user?.name?.[0] ?? user?.username?.[0] ?? "?"}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span className="font-medium text-black">
+                    {user?.username ?? user?.name ?? "User"}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Page content */}

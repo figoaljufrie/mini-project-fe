@@ -87,3 +87,14 @@ export async function logout() {
   setAuthToken(undefined);
   return api.post("/auth/logout");
 }
+
+export const updateAvatar = async (id: number, file: File): Promise<User> => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  const res = await api.put(`/${id}/avatar`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return res.data.data;
+};
