@@ -9,10 +9,11 @@ function slugify(title: string) {
   return title.toLowerCase().replace(/\s+/g, "-");
 }
 
-export default function EventDetailsPage({ params }: { params: { slug: string } }) {
+export default async function EventDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const event = useMemo(() => {
-    return events.find((e) => slugify(e.title) === params.slug);
-  }, [params.slug]);
+    return events.find((e) => slugify(e.title) === slug);
+  }, [slug]);
 
   if (!event) {
     return (
