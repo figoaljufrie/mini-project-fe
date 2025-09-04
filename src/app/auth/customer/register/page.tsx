@@ -1,5 +1,6 @@
 // auth/customer/register/page.tsx
 import RegisterCustomerForm from "@/components/customer/register/registerCustomerForm";
+import ProtectedRoute from "@/components/protected-routes/ProtectedRoutes";
 
 export default function RegisterCustomerPage() {
   return (

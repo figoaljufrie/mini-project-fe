@@ -20,6 +20,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 // ✅ newly added
 import { usePoints } from "@/app/points/services/hooks/usePoints";
 import { useCoupons } from "@/app/coupon/hooks/useCoupon";
+import ProtectedRoute from "@/components/protected-routes/ProtectedRoutes";
 
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -110,6 +111,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="p-8 max-w-5xl mx-auto space-y-8">
       <Card className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 border border-teal-700/40 rounded-2xl shadow-[0_10px_25px_rgba(0,128,128,0.4)] hover:shadow-[0_15px_35px_rgba(0,128,128,0.6)] transition-all duration-300">
         <CardContent className="p-8 space-y-10">
@@ -279,5 +281,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   );
 }

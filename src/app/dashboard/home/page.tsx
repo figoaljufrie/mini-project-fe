@@ -7,6 +7,7 @@ import { DataTable } from "./components/tables/recent-transaction";
 import { ChartAreaAxes } from "./components/charts/chart-area";
 import { ColumnDef } from "@tanstack/react-table";
 import { TransactionWithRelations } from "./components/tables/recent-transaction";
+import ProtectedRoute from "@/components/protected-routes/ProtectedRoutes";
 
 // Read-only columns for Dashboard
 const transactionColumnsReadOnly: ColumnDef<TransactionWithRelations>[] = [
@@ -116,91 +117,93 @@ export default function DashboardHomePage() {
   );
 
   // Only DONE transactions for revenue
-  const doneTransactions = transactions.filter(tx => tx.status === "DONE");
+  const doneTransactions = transactions.filter((tx) => tx.status === "DONE");
   const totalRevenueFromDone = doneTransactions.reduce(
     (acc, tx) => acc + (tx.totalIdr ?? 0),
     0
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 p-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { title: "Total Attendees", value: totalAttendees },
-          { title: "Total Coupons", value: totalCoupons },
-          { title: "Total Coupons Used", value: totalCouponsUsed },
-          { title: "Total Events", value: totalEvents },
-        ].map((item) => (
-          <Card
-            key={item.title}
-            className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
+    <ProtectedRoute>
+      <div className="max-w-7xl mx-auto space-y-10 p-6">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[
+            { title: "Total Attendees", value: totalAttendees },
+            { title: "Total Coupons", value: totalCoupons },
+            { title: "Total Coupons Used", value: totalCouponsUsed },
+            { title: "Total Events", value: totalEvents },
+          ].map((item) => (
+            <Card
+              key={item.title}
+              className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
               border border-teal-700/40 transform transition-transform hover:-translate-y-1 
               hover:shadow-[0_6px_15px_rgba(0,128,128,0.6)]"
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold text-black">
+                  {item.title}
+                </CardTitle>
+                <div className="h-px bg-black/20 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <span className="text-3xl font-bold text-black">
+                  {typeof item.value === "number"
+                    ? item.value.toLocaleString()
+                    : item.value}
+                </span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Revenue + Transactions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Revenue Chart */}
+          <Card
+            className="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
+          border border-teal-700/40 transform transition-transform hover:-translate-y-1 
+          hover:shadow-[0_6px_15px_rgba(0,128,128,0.6)]"
           >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-black">
-                {item.title}
+                Revenue Overview
               </CardTitle>
               <div className="h-px bg-black/20 mt-2" />
             </CardHeader>
             <CardContent>
-              <span className="text-3xl font-bold text-black">
-                {typeof item.value === "number"
-                  ? item.value.toLocaleString()
-                  : item.value}
-              </span>
+              <div className="mb-4 text-3xl font-bold text-black">
+                {totalRevenueFromDone.toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
+                })}
+              </div>
+              <ChartAreaAxes transactions={doneTransactions} />
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* Revenue + Transactions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Revenue Chart */}
-        <Card
-          className="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
+          {/* Transactions Table */}
+          <Card
+            className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
           border border-teal-700/40 transform transition-transform hover:-translate-y-1 
           hover:shadow-[0_6px_15px_rgba(0,128,128,0.6)]"
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-black">
-              Revenue Overview
-            </CardTitle>
-            <div className="h-px bg-black/20 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4 text-3xl font-bold text-black">
-              {totalRevenueFromDone.toLocaleString("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                minimumFractionDigits: 0,
-              })}
-            </div>
-            <ChartAreaAxes transactions={doneTransactions} />
-          </CardContent>
-        </Card>
-
-        {/* Transactions Table */}
-        <Card
-          className="backdrop-blur-xl bg-gradient-to-br from-teal-400/30 via-teal-500/30 to-teal-600/30 
-          border border-teal-700/40 transform transition-transform hover:-translate-y-1 
-          hover:shadow-[0_6px_15px_rgba(0,128,128,0.6)]"
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-black">
-              Recent Transactions
-            </CardTitle>
-            <div className="h-px bg-black/20 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={transactionColumnsReadOnly}
-              data={transactions} // full transactions list
-            />
-          </CardContent>
-        </Card>
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-black">
+                Recent Transactions
+              </CardTitle>
+              <div className="h-px bg-black/20 mt-2" />
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={transactionColumnsReadOnly}
+                data={transactions} // full transactions list
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

@@ -111,7 +111,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
             type="text"
             id="title"
             {...register('title')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Masukkan judul event"
           />
           {errors.title && (
@@ -127,7 +127,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
           <select
             id="category"
             {...register('category')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Pilih kategori</option>
             {EVENT_CATEGORIES.map((category) => (
@@ -150,7 +150,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
             type="text"
             id="location"
             {...register('location')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Masukkan lokasi event"
           />
           {errors.location && (
@@ -169,7 +169,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
               id="priceIdr"
               {...register('priceIdr')}
               disabled={watchedIsFree}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
               placeholder="0"
               min="0"
             />
@@ -201,7 +201,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
               type="datetime-local"
               id="startsAt"
               {...register('startsAt')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {errors.startsAt && (
               <p className="mt-1 text-sm text-red-600">{errors.startsAt.message}</p>
@@ -216,7 +216,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
               type="datetime-local"
               id="endsAt"
               {...register('endsAt')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {errors.endsAt && (
               <p className="mt-1 text-sm text-red-600">{errors.endsAt.message}</p>
@@ -233,7 +233,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
             type="number"
             id="quantity"
             {...register('quantity')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="1"
             min="1"
             max="10000"
@@ -252,7 +252,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
             type="text"
             id="ticketTypes"
             {...register('ticketTypes')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="VIP,Regular,Gold"
           />
           <p className="mt-1 text-sm text-gray-500">
@@ -272,7 +272,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
             id="description"
             {...register('description')}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Masukkan deskripsi lengkap event"
           />
           {errors.description && (
@@ -285,7 +285,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
           <button
             type="button"
             onClick={handleCancel}
-            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-2 border border-gray-300 text-black rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           >
             Batal
@@ -293,7 +293,7 @@ const CreateEventForm: React.FC<CreateEventFormProps> = ({ onSuccess, onCancel }
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Membuat...' : 'Buat Event'}
           </button>

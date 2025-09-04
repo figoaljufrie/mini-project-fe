@@ -145,7 +145,7 @@ export const transactionColumns = (
   {
     accessorKey: "user",
     header: "Customer",
-    cell: ({ row }) => row.original.user?.name || "-",
+    cell: ({ row }) => row.original.user?.id || "-",
   },
   {
     accessorKey: "event",
