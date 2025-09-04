@@ -20,12 +20,13 @@ export default function ForgotPasswordPage() {
         className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-4"
         onSubmit={onSubmit}
       >
-        <h2 className="text-2xl font-bold text-gray-900">Forgot Password</h2>
-        <p className="text-gray-700 mb-4">
+        <h2 className="text-2xl font-bold text-black">Forgot Password</h2>
+        <p className="text-black mb-4">
           Enter your email to receive a password reset link.
         </p>
 
         <Input
+        className="text-black"
           type="email"
           placeholder="Email"
           value={email}
